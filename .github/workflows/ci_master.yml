@@ -45,13 +45,13 @@ jobs:
         run: |
           set -euo pipefail
           KEYSTORE_PATH="$GITHUB_WORKSPACE/android_app/my-release-key.keystore"
-          trap 'if command -v shred >/dev/null 2>&1; then shred -u "$KEYSTORE_PATH"; else rm -f "$KEYSTORE_PATH"; fi' EXIT
+          trap 'if [[ -f "$KEYSTORE_PATH" ]]; then if command -v shred >/dev/null 2>&1; then shred -u "$KEYSTORE_PATH"; else rm -f "$KEYSTORE_PATH"; fi; fi' EXIT
           echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
 
           APK_DIR="$GITHUB_WORKSPACE/android_app/app/build/outputs/apk/debug"
           APK_PATH="$APK_DIR/app-debug.apk"
           if [[ ! -f "$APK_PATH" ]]; then
-            APK_PATH=$(find "$APK_DIR" -maxdepth 1 -name "*.apk" ! -name "*-aligned.apk" ! -name "*-signed.apk" | sort -V | head -n 1)
+            APK_PATH="$(find "$APK_DIR" -maxdepth 1 -name "*.apk" ! -name "*-aligned.apk" ! -name "*-signed.apk" | sort -V | head -n 1 || true)"
           fi
           if [[ -z "$APK_PATH" ]]; then
             echo "::error::No APK found in $APK_DIR"
