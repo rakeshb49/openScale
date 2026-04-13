@@ -49,18 +49,16 @@ jobs:
           echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
 
           APK_DIR="$GITHUB_WORKSPACE/android_app/app/build/outputs/apk/debug"
-          APK_PATH=$(find "$APK_DIR" -name "*.apk" | head -n 1)
+          APK_PATH="$APK_DIR/app-debug.apk"
+          if [[ ! -f "$APK_PATH" ]]; then
+            APK_PATH=$(find "$APK_DIR" -maxdepth 1 -name "*.apk" ! -name "*-aligned.apk" ! -name "*-signed.apk" | sort | head -n 1)
+          fi
           if [[ -z "$APK_PATH" ]]; then
             echo "::error::No APK found in $APK_DIR"
             exit 1
           fi
 
-          BUILD_TOOLS_VERSION=34.0.0
-          BUILD_TOOLS_PATH="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION"
-          if [[ ! -d "$BUILD_TOOLS_PATH" ]]; then
-            BUILD_TOOLS_VERSION=$(ls "$ANDROID_SDK_ROOT/build-tools" | sort -V | tail -n 1)
-            BUILD_TOOLS_PATH="$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION"
-          fi
+          BUILD_TOOLS_PATH=$(find "$ANDROID_SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
           if [[ ! -x "$BUILD_TOOLS_PATH/zipalign" || ! -x "$BUILD_TOOLS_PATH/apksigner" ]]; then
             echo "::error::Required Android build-tools not found in $BUILD_TOOLS_PATH"
             exit 1
