@@ -45,7 +45,7 @@ jobs:
           APK_DIR="$GITHUB_WORKSPACE/android_app/app/build/outputs/apk/beta"
           APK_PATH="$APK_DIR/app-beta.apk"
           if [[ ! -f "$APK_PATH" ]]; then
-            APK_PATH="$(find "$APK_DIR" -maxdepth 1 -name "*.apk" ! -name "*-aligned.apk" ! -name "*-signed.apk" -printf '%T@ %p\n' | sort -nr | head -n 1 | cut -d' ' -f2- || true)"
+            APK_PATH="$(ls -t "$APK_DIR"/*.apk 2>/dev/null | grep -Ev '(-aligned|-signed)\.apk$' | head -n 1 || true)"
           fi
           if [[ -z "$APK_PATH" ]]; then
             echo "::error::No APK found in $APK_DIR"
@@ -57,6 +57,10 @@ jobs:
             exit 1
           fi
           BUILD_TOOLS_PATH=$(find "$ANDROID_SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          if [[ -z "$BUILD_TOOLS_PATH" ]]; then
+            echo "::error::No Android build-tools directory found in $ANDROID_SDK_ROOT/build-tools"
+            exit 1
+          fi
           if [[ ! -x "$BUILD_TOOLS_PATH/zipalign" || ! -x "$BUILD_TOOLS_PATH/apksigner" ]]; then
             echo "::error::Required Android build-tools not found in $BUILD_TOOLS_PATH"
             exit 1
