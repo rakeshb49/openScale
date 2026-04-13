@@ -35,6 +35,17 @@ jobs:
           java-version: "21"
       - name: Build APK
         run: ./gradlew assembleDebug
+
+      - name: Sign Android APK
+        uses: r0adkll/sign-android-release@v1.0.4
+        id: sign_app
+        with:
+          releaseDirectory: android_app/app/build/outputs/apk/debug
+          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
+          alias: ${{ secrets.KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword: ${{ secrets.KEY_PASSWORD }}
+
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
@@ -42,5 +53,4 @@ jobs:
           prerelease: true
           title: "openScale development build"
           files: |
-            android_app/app/build/outputs/apk/debug/openScale-debug.apk
-
+            ${{ steps.sign_app.outputs.signedReleaseFile }}
