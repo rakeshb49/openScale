@@ -67,7 +67,7 @@ jobs:
           fi
 
           "$BUILD_TOOLS_PATH/zipalign" -v -p 4 "$APK_PATH" "$APK_DIR/app-debug-aligned.apk"
-          "$BUILD_TOOLS_PATH/apksigner" sign --ks "$KEYSTORE_PATH" --ks-key-alias "$KEY_ALIAS" --ks-pass "pass:$KEYSTORE_PASSWORD" --key-pass "pass:$KEY_PASSWORD" --out "$APK_DIR/app-debug-signed.apk" "$APK_DIR/app-debug-aligned.apk"
+          "$BUILD_TOOLS_PATH/apksigner" sign --ks "$KEYSTORE_PATH" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out "$APK_DIR/app-debug-signed.apk" "$APK_DIR/app-debug-aligned.apk"
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
