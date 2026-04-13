@@ -31,7 +31,7 @@ jobs:
         run: ./gradlew assembleBeta
 
       - name: Sign Android APK
-        uses: r0adkll/sign-android-release@v1
+        uses: r0adkll/sign-android-release@v1.0.4
         id: sign_app
         with:
           releaseDirectory: android_app/app/build/outputs/apk/beta
