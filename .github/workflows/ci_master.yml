@@ -36,15 +36,44 @@ jobs:
       - name: Build APK
         run: ./gradlew assembleDebug
 
-      - name: Sign Android APK
-        uses: r0adkll/sign-android-release@v1.0.4
-        id: sign_app
-        with:
-          releaseDirectory: android_app/app/build/outputs/apk/debug
-          signingKeyBase64: ${{ secrets.KEYSTORE_BASE64 }}
-          alias: ${{ secrets.KEY_ALIAS }}
-          keyStorePassword: ${{ secrets.KEYSTORE_PASSWORD }}
-          keyPassword: ${{ secrets.KEY_PASSWORD }}
+      - name: Sign APK
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          KEYSTORE_PATH="$GITHUB_WORKSPACE/android_app/my-release-key.keystore"
+          trap 'if [[ -f "$KEYSTORE_PATH" ]]; then if command -v shred >/dev/null 2>&1; then shred -u "$KEYSTORE_PATH"; else rm -f "$KEYSTORE_PATH"; fi; fi' EXIT
+          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
+
+          APK_DIR="$GITHUB_WORKSPACE/android_app/app/build/outputs/apk/debug"
+          APK_PATH="$APK_DIR/app-debug.apk"
+          if [[ ! -f "$APK_PATH" ]]; then
+            APK_PATH="$(ls -t "$APK_DIR"/*.apk 2>/dev/null | grep -Ev '(-aligned|-signed)\.apk$' | head -n 1 || true)"
+          fi
+          if [[ -z "$APK_PATH" ]]; then
+            echo "::error::No APK found in $APK_DIR"
+            exit 1
+          fi
+
+          if [[ -z "${ANDROID_SDK_ROOT:-}" ]]; then
+            echo "::error::ANDROID_SDK_ROOT is not set"
+            exit 1
+          fi
+          BUILD_TOOLS_PATH=$(find "$ANDROID_SDK_ROOT/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n 1)
+          if [[ -z "$BUILD_TOOLS_PATH" ]]; then
+            echo "::error::No Android build-tools directory found in $ANDROID_SDK_ROOT/build-tools"
+            exit 1
+          fi
+          if [[ ! -x "$BUILD_TOOLS_PATH/zipalign" || ! -x "$BUILD_TOOLS_PATH/apksigner" ]]; then
+            echo "::error::Required Android build-tools not found in $BUILD_TOOLS_PATH"
+            exit 1
+          fi
+
+          "$BUILD_TOOLS_PATH/zipalign" -v -p 4 "$APK_PATH" "$APK_DIR/app-debug-aligned.apk"
+          "$BUILD_TOOLS_PATH/apksigner" sign --ks "$KEYSTORE_PATH" --ks-key-alias "$KEY_ALIAS" --ks-pass env:KEYSTORE_PASSWORD --key-pass env:KEY_PASSWORD --out "$APK_DIR/app-debug-signed.apk" "$APK_DIR/app-debug-aligned.apk"
 
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
@@ -53,4 +82,4 @@ jobs:
           prerelease: true
           title: "openScale development build"
           files: |
-            ${{ steps.sign_app.outputs.signedReleaseFile }}
+            android_app/app/build/outputs/apk/debug/app-debug-signed.apk
