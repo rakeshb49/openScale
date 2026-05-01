@@ -27,7 +27,7 @@ import com.health.openscale.core.bluetooth.scales.CustomOpenScaleHandler
 import com.health.openscale.core.bluetooth.scales.DebugGattHandler
 import com.health.openscale.core.bluetooth.scales.DeviceSupport
 import com.health.openscale.core.bluetooth.scales.DigooDGSO38HHandler
-import com.health.openscale.core.bluetooth.scales.ESCS20mHandler
+import com.health.openscale.core.bluetooth.scales.ESCS20MHandler
 import com.health.openscale.core.bluetooth.scales.ExcelvanCF36xHandler
 import com.health.openscale.core.bluetooth.scales.ExingtechY1Handler
 import com.health.openscale.core.bluetooth.scales.EbelterBodyFatB2Handler
@@ -48,7 +48,8 @@ import com.health.openscale.core.bluetooth.scales.OkOkHandler
 import com.health.openscale.core.bluetooth.scales.OneByoneHandler
 import com.health.openscale.core.bluetooth.scales.OneByoneNewHandler
 import com.health.openscale.core.bluetooth.scales.QNHandler
-import com.health.openscale.core.bluetooth.scales.RealmeScaleHandler
+import com.health.openscale.core.bluetooth.scales.QNHandlerBroadcast
+import com.health.openscale.core.bluetooth.scales.RealmeSmartScaleHandler
 import com.health.openscale.core.bluetooth.scales.RenphoES26BBHandler
 import com.health.openscale.core.bluetooth.scales.RenphoHandler
 import com.health.openscale.core.bluetooth.scales.RunstarR5Handler
@@ -89,7 +90,7 @@ class ScaleFactory @Inject constructor(
 
     // List of modern Kotlin-based device handlers.
     private val modernKotlinHandlers: List<ScaleDeviceHandler> = listOf(
-        RealmeScaleHandler(), // Added Realme handler here
+        RealmeSmartScaleHandler(), // Added Realme handler here
         YunmaiHandler(isMini = false),
         YunmaiHandler(isMini = true),
         TrisaBodyAnalyzeHandler(),
@@ -99,6 +100,7 @@ class ScaleFactory @Inject constructor(
         SinocareHandler(),
         SenssunHandler(),
         RenphoHandler(),
+        QNHandlerBroadcast(),
         QNHandler(),
         OneByoneHandler(),
         OneByoneNewHandler(),
@@ -118,7 +120,7 @@ class ScaleFactory @Inject constructor(
         EbelterBodyFatB2Handler(),
         ExcelvanCF36xHandler(),
         EtekcityESF551Handler(),
-        ESCS20mHandler(),
+        ESCS20MHandler(),
         RenphoES26BBHandler(),
         DigooDGSO38HHandler(),
         DebugGattHandler(),
